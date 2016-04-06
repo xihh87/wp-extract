@@ -3,12 +3,8 @@
 """
 import argparse
 import bs4
+from pprint import pprint
 from bs4 import BeautifulSoup as bs
-
-def parse_args():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('file', nargs='+', help='The filename containing the post.')
-    return parser.parse_args()
 
 def unwanted_tags(tag):
     return tag.name in ['script', 'noscript', 'form', 'br'] or \
@@ -60,56 +56,76 @@ def post_info(post):
 
     return data
 
+def test_info():
+    failed = False
+    filename = '/home/joshpar/src/webdev/libertas87.wordpress.com/2014/01/27/redshift-contra-el-insomnio-computacional/index.html'
+    post = post_html(filename)
+    result = post_info(post)
+    data = {
+            'date': '2014-01-27T06:26:01+00:00',
+            'author': 'Joshua Haase',
+            'title': 'Redshift: contra el insomnio computacional',
+            'tags': ["how-to", "manual"],
+            'categories': ['Software Libre'],
+    }
+    for key in data:
+        if key not in result:
+            print("{} not in result".format(key))
+
+        if not data[key] == result[key]:
+            if not type(data[key]) == type(result[key]):
+                print("Datatype differs: {}, {}". format(
+                    type(data[key]), type(result[key])
+                ))
+            print("key in result «{}» differs from «{}»".format(
+                    result[key], data[key] ))
+            if  hasattr(data[key], '__iter__'):
+                for i in range(len(data[key])):
+                    if not data[key][i] == result[key][i]:
+                        print("\t{} index differs in key {}: {},     {}".format(
+                            i, key, data[key][i], result[key][i]
+                            ))
+    if not failed:
+        print("TESTS OK")
+    exit(0)
+
+def print_post(post):
+    content = post.find('div', attrs = {'class': 'post-content'})
+    for tag in content.find_all(unwanted_tags):
+        type(tag) == bs4.element.Tag and tag.decompose()
+
+    content.attrs = {}
+    content.name = 'body'
+    if content.find('div'):
+        content.find('div').decompose()
+
+    for tag in content:
+        tag.attrs = {}
+
+    print(content)
+
+def print_info(post_info):
+    print('+++\ntitle = "{}"\ndate = "{}"\nauthor = "{}"\ntags = {}\ncategories = {}\n+++\n'.format(
+        post_info['title'],
+        post_info['date'],
+        post_info['author'],
+        post_info['tags'],
+        post_info['categories'],
+    ))
+
 if __name__ == '__main__':
-    args = parse_args()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('action', help="What should we print.", choices=['post', 'info'])
+    parser.add_argument('file', help='The filename containing the post.')
+    args = parser.parse_args()
 
-    from pprint import pprint
+    if args.file == 'test':
+        test_info()
 
-    if args.file == ['test']:
-        args.file = ['/home/joshpar/src/webdev/libertas87.wordpress.com/2014/01/27/redshift-contra-el-insomnio-computacional/index.html']
-        for filename in args.file:
-            post = post_html(filename)
-            result = post_info(post)
-            data = {
-                    'date': '2014-01-27T06:26:01+00:00',
-                    'author': 'Joshua Haase',
-                    'title': 'Redshift: contra el insomnio computacional',
-                    'tags': ["how-to", "manual"],
-                    'categories': ['Software Libre'],
-            }
-            for key in data:
-                if key not in result:
-                    print("{} not in result".format(key))
+    post = post_html(args.file)
 
-
-                if not data[key] == result[key]:
-                    if not type(data[key]) == type(result[key]):
-                        print("Datatype differs: {}, {}". format(
-                            type(data[key]), type(result[key])
-                        ))
-                    print("key in result «{}» differs from «{}»".format(
-                            result[key], data[key] ))
-                    if  hasattr(data[key], '__iter__'):
-                        for i in range(len(data[key])):
-                            if not data[key][i] == result[key][i]:
-                                print("\t{} index differs in key {}: {},     {}".format(
-                                    i, key, data[key][i], result[key][i]
-                                ))
-
-    for fname in args.file:
-        post = post_html(fname)
-        result = post_info(post)
-        pprint(result)
-        content = post.find('div', attrs = {'class': 'post-content'})
-        for tag in content.find_all(unwanted_tags):
-            type(tag) == bs4.element.Tag and tag.decompose()
-
-        content.attrs = {}
-        content.name = 'body'
-        if content.find('div'):
-            content.find('div').decompose()
-
-        for tag in content:
-            tag.attrs = {}
-
-        print(content)
+    if args.action == 'post':
+        print_post(post)
+    elif args.action == 'info':
+        info = post_info(post)
+        print_info(info)
