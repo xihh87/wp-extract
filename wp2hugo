@@ -1,0 +1,4 @@
+#!/bin/sh
+FILE="$1"
+python /home/joshpar/src/wp-extract/post2hugo.py info "$FILE" | tr \' \"
+python /home/joshpar/src/wp-extract/post2hugo.py post "$FILE" | pandoc -f html -t markdown
