@@ -58,7 +58,7 @@ def post_info(post):
 
 def test_info():
     failed = False
-    filename = '/home/joshpar/src/webdev/libertas87.wordpress.com/2014/01/27/redshift-contra-el-insomnio-computacional/index.html'
+    filename = './tests/index.html'
     post = post_html(filename)
     result = post_info(post)
     data = {
