@@ -20,11 +20,15 @@ def get_content(tag):
 def post_html(filename):
     return bs(open(filename), "html.parser")
 
-def post_info(post):
-    data = { 'author': 'Joshua Haase',
+def post_info(post, author=None):
+    data = {
+             'author': '',
              'tags': [],
              'categories': []
     }
+
+    if author:
+        data['author'] = author
 
     head = post.find('head')
     head_tags = head.findChildren()
@@ -59,8 +63,9 @@ def post_info(post):
 def test_info():
     failed = False
     filename = './tests/index.html'
+    author = 'Joshua Haase'
     post = post_html(filename)
-    result = post_info(post)
+    result = post_info(post, author)
     data = {
             'date': '2014-01-27T06:26:01+00:00',
             'author': 'Joshua Haase',
@@ -117,15 +122,21 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', help="What should we print.", choices=['post', 'info'])
     parser.add_argument('file', help='The filename containing the post.')
+    parser.add_argument('--author', help='The name of the author.')
     args = parser.parse_args()
 
     if args.file == 'test':
         test_info()
+
+    if args.author:
+        author = args.author
+    else:
+        author = None
 
     post = post_html(args.file)
 
     if args.action == 'post':
         print_post(post)
     elif args.action == 'info':
-        info = post_info(post)
+        info = post_info(post, author)
         print_info(info)
